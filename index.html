@@ -11,9 +11,9 @@
         .resumo-label { font-size: 0.7rem; text-transform: uppercase; font-weight: bold; color: #888; display: block; }
         .resumo-value { font-size: 1.1rem; font-weight: bold; margin-top: 3px; }
         .meta-ref { font-size: 0.72rem; color: #aaa; font-weight: normal; display: block; }
-        .status-low { color: #dc3545; }    /* Vermelho (Falta) */
-        .status-ok { color: #28a745; }     /* Verde (Dentro da faixa) */
-        .status-high { color: #fd7e14; }   /* Laranja (Passou do máximo) */
+        .status-low { color: #dc3545; }
+        .status-ok { color: #28a745; }
+        .status-high { color: #fd7e14; }
         .btn-pdf { background: #222; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; margin-bottom: 15px; cursor: pointer; }
         .refeicao-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .refeicao-header { border-bottom: 1px solid #eee; margin-bottom: 10px; padding-bottom: 8px; }
@@ -101,156 +101,6 @@ function render() {
     const cont = document.getElementById('refeicoes');
     cont.innerHTML = '';
     let carryKcal=0, carryCarb=0, carryProt=0, carryGord=0;
-    const nomesRef = ["Café da Manhã", "Almoço", "Café da Tarde", "Jantar"];
-
-    nomesRef.forEach((nome, rIdx) => {
-        let rk=0, rc=0, rp=0, rg=0;
-        let metaAjK = metas.refs[rIdx].kcal - carryKcal;
-        let metaAjC = metas.refs[rIdx].carb - carryCarb;
-        let metaAjP = metas.refs[rIdx].prot - carryProt;
-        let metaAjG = metas.refs[rIdx].gord - carryGord;
-
-        let itemsHtml = diario[rIdx].map((item, iIdx) => {
-            rk+=item.kcal; rc+=item.carb; rp+=item.prot; rg+=item.gord;
-            return `<div class="item-box">
-                <span class="item-name">${item.n} | ${item.kcal} kcal</span>
-                <div class="item-macros-tags">
-                    <span class="tag">C: ${item.carb}g</span><span class="tag">P: ${item.prot}g</span><span class="tag">G: ${item.gord}g</span>
-                </div>
-                <button class="btn-del no-print" onclick="del(${rIdx}, ${iIdx})">✕</button>
-            </div>`;
-        }).join('');
-
-        carryKcal = rk - metaAjK;
-        carryCarb = rc - metaAjC;
-        carryProt = rp - metaAjP;
-        carryGord = rg - metaAjG;
-
-        tk+=rk; tc+=rc; tp+=rp; tg+=rg;
-
-        cont.innerHTML += `
-        <div class="refeicao-card">
-            <div class="refeicao-header">
-                <h2 class="refeicao-title">${nome}</h2>
-                <div class="macros-row">
-                    <span class="${rk >= metaAjK ? 'status-ok' : 'status-low'}">Kcal: ${rk.toFixed(0)} <span class="meta-ref">Meta: ${metaAjK.toFixed(0)}</span></span>
-                    <span class="${rc >= metaAjC ? 'status-ok' : 'status-low'}">C: ${rc.toFixed(1)} <span class="meta-ref">Meta: ${metaAjC.toFixed(1)}</span></span>
-                    <span class="${rp >= metaAjP ? 'status-ok' : 'status-low'}">P: ${rp.toFixed(1)} <span class="meta-ref">Meta: ${metaAjP.toFixed(1)}</span></span>
-                    <span class="${rg >= metaAjG ? 'status-ok' : 'status-low'}">G: ${rg.toFixed(1)} <span class="meta-ref">Meta: ${metaAjG.toFixed(1)}</span></span>
-                </div>
-            </div>
-            ${itemsHtml}
-            <div class="selector-group no-print">
-                <select id="sel-${rIdx}">${alimentos.map((a, i) => `<option value="${i}">${a.n}</option>`).join('')}</select>
-                <button class="btn-add" onclick="add(${rIdx})">+</button>
-            </div>
-        </div>`;
-    });
-
-    const topo = document.getElementById('topo-resumo');
-    const f = metas.total;
-    topo.innerHTML = `
-        <div class="resumo-card"><span class="resumo-label">Calorias Totais</span>
-            <div class="resumo-value ${getStatusClass(tk, f.kcal)}">${tk.toFixed(0)} <span class="meta-ref">Alvo: ${f.kcal[0]}-${f.kcal[1]}</span></div></div>
-        <div class="resumo-card"><span class="resumo-label">Carbos Totais</span>
-            <div class="resumo-value ${getStatusClass(tc, f.carb)}">${tc.toFixed(1)} <span class="meta-ref">Alvo: ${f.carb[0]}-${f.carb[1]}</span></div></div>
-        <div class="resumo-card"><span class="resumo-label">Proteínas Totais</span>
-            <div class="resumo-value ${getStatusClass(tp, f.prot)}">${tp.toFixed(1)} <span class="meta-ref">Alvo: ${f.prot[0]}-${f.prot[1]}</span></div></div>
-        <div class="resumo-card"><span class="resumo-label">Gorduras Totais</span>
-            <div class="resumo-value ${getStatusClass(tg, f.gord)}">${tg.toFixed(1)} <span class="meta-ref">Alvo: ${f.gord[0]}-${f.gord[1]}</span></div></div>
-    `;
-}
-
-function add(rIdx) {
-    const sel = document.getElementById(`sel-${rIdx}`);
-    if(sel.value > 0) { diario[rIdx].push(alimentos[sel.value]); render(); }
-}
-function del(rIdx, iIdx) { diario[rIdx].splice(iIdx, 1); render(); }
-
-render();
-</script>
-</body>
-</html>
-        select { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 0.9rem; background: white; }
-        .btn-add { background: #eee; border: 1px solid #ddd; padding: 0 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
-        @media print { .no-print { display: none; } .resumo-container { position: static; } .refeicao-card { break-inside: avoid; } }
-    </style>
-</head>
-<body>
-
-<div class="resumo-container" id="topo-resumo"></div>
-
-<button class="btn-pdf no-print" onclick="window.print()">SALVAR DIETA EM PDF</button>
-
-<div id="refeicoes"></div>
-
-<script>
-// METAS DEFINIDAS EM FAIXAS (MÍNIMO E MÁXIMO)
-const metas = {
-    total: {
-        kcal: [1780, 1890],
-        carb: [215, 230],
-        prot: [110, 135],
-        gord: [59, 64]
-    },
-    // Metas por refeição baseadas na proporção média
-    refs: [
-        { kcal: 429, carb: 49.7, prot: 24.5, gord: 18.6 },
-        { kcal: 455, carb: 48.7, prot: 38.1, gord: 17.9 },
-        { kcal: 501, carb: 88.0, prot: 27.1, gord: 7.2 },
-        { kcal: 417, carb: 41.9, prot: 35.7, gord: 17.6 }
-    ]
-};
-
-const alimentos = [
-    { n: "+ Selecionar...", kcal: 0, carb: 0, prot: 0, gord: 0 },
-    { n: "Cuscuz cozido (50g)", kcal: 56.5, carb: 12.65, prot: 1.1, gord: 0.35 },
-    { n: "Cuscuz cozido (100g)", kcal: 113, carb: 25.3, prot: 2.2, gord: 0.7 },
-    { n: "Cuscuz cru (50g)", kcal: 176, carb: 40, prot: 3.2, gord: 0.4 },
-    { n: "Ovo cozido grande (58g)", kcal: 76, carb: 0.3, prot: 6.9, gord: 4.9 },
-    { n: "Ovo cozido sem a gema", kcal: 18, carb: 0, prot: 4.2, gord: 0 },
-    { n: "Dois ovos fritos na margarina", kcal: 121, carb: 0.3, prot: 13.8, gord: 9.9 },
-    { n: "Margarina (10g)", kcal: 45, carb: 0, prot: 0, gord: 5 },
-    { n: "Óleo de soja (10 ml)", kcal: 83, carb: 0, prot: 0, gord: 9.2 },
-    { n: "Arroz cozido (100g)", kcal: 149, carb: 28, prot: 2.5, gord: 2.5 },
-    { n: "Feijão cozido (100g)", kcal: 76, carb: 13.6, prot: 4.8, gord: 0.5 },
-    { n: "Feijão cozido (150g)", kcal: 114, carb: 20.4, prot: 7.2, gord: 0.75 },
-    { n: "Pão sovado (40g)", kcal: 124, carb: 24.6, prot: 3.4, gord: 1.1 },
-    { n: "Pão francês inteiro (38g)", kcal: 114, carb: 22.3, prot: 3, gord: 1.2 },
-    { n: "Pão francês sem miolo (22g)", kcal: 66, carb: 12.9, prot: 1.8, gord: 0.7 },
-    { n: "Aveia (40g)", kcal: 148, carb: 23, prot: 5.6, gord: 3.1 },
-    { n: "Granola normal (40g)", kcal: 150, carb: 32, prot: 2.4, gord: 2.1 },
-    { n: "Farinha lacta (30g)", kcal: 122, carb: 22, prot: 3.8, gord: 1.9 },
-    { n: "Tapioca (65g)", kcal: 228, carb: 57, prot: 0, gord: 0 },
-    { n: "Banana (70g)", kcal: 69, carb: 18.2, prot: 0.9, gord: 0.07 },
-    { n: "Banana (100g)", kcal: 98, carb: 26, prot: 1.3, gord: 0.1 },
-    { n: "Banana (150g)", kcal: 147, carb: 39, prot: 2, gord: 0.15 },
-    { n: "Leite em pó integral (13g)", kcal: 65, carb: 5, prot: 3.2, gord: 3.5 },
-    { n: "Leite em pó desnatado (13g)", kcal: 44, carb: 6.5, prot: 4.5, gord: 0 },
-    { n: "Leite em pó desnatado (26g)", kcal: 88, carb: 13, prot: 9, gord: 0 },
-    { n: "Leite em pó integral (26g)", kcal: 129, carb: 10, prot: 6.5, gord: 7 },
-    { n: "Frango frito (70g)", kcal: 173, carb: 0, prot: 22, gord: 8.8 },
-    { n: "Carne frita (60g)", kcal: 116, carb: 0, prot: 21.5, gord: 9.7 },
-    { n: "Carne frita (70g)", kcal: 198, carb: 0, prot: 25.1, gord: 10.2 },
-    { n: "Queijo coalho Irmã (30g)", kcal: 96, carb: 1.1, prot: 6.4, gord: 7.4 },
-    { n: "Queijo coalho Medeiros (21g)", kcal: 67, carb: 0.8, prot: 5.2, gord: 6.09 }
-];
-
-let diario = [[], [], [], []];
-
-function getStatusClass(valor, faixa) {
-    if (valor < faixa[0]) return 'status-low';
-    if (valor > faixa[1]) return 'status-high';
-    return 'status-ok';
-}
-
-function render() {
-    let tk=0, tc=0, tp=0, tg=0;
-    const cont = document.getElementById('refeicoes');
-    cont.innerHTML = '';
-    let carryKcal=0, carryCarb=0, carryProt=0, carryGord=0;
-
     const nomesRef = ["Café da Manhã", "Almoço", "Café da Tarde", "Jantar"];
 
     nomesRef.forEach((nome, rIdx) => {
